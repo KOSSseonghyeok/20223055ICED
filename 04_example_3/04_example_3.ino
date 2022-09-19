@@ -18,6 +18,6 @@ void loop() {
   delay(1000);
 }
 
-int toggle_state(int toggle) {
+unsigned int toggle_state(unsigned int toggle) {
   return ~toggle;
   }
