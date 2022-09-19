@@ -19,9 +19,5 @@ void loop() {
 }
 
 int toggle_state(int toggle) {
-  if(toggle == 1){
-    toggle = 0;
-  }else{
-    toggle = 1;}
+  return ~toggle;
   }
-
