@@ -14,6 +14,8 @@
 #define SCALE (0.001 * 0.5 * SND_VEL) // coefficent to convert duration to distance
 
 unsigned long last_sampling_time;   // unit: msec
+int previous;
+float distance;
 
 void setup() {
   // initialize GPIO pins
@@ -27,27 +29,34 @@ void setup() {
 }
 
 void loop() {
-  float distance;
 
   // wait until next sampling time. 
   // millis() returns the number of milliseconds since the program started.
   //    Will overflow after 50 days.
   if (millis() < (last_sampling_time + INTERVAL))
     return;
-
+  
   distance = USS_measure(PIN_TRIG, PIN_ECHO); // read distance
-
+  
   if (distance < _DIST_MIN) {
-    distance = _DIST_MIN;    // Set Lower Value
- analogWrite(PIN_LED, int(255-(255*(int(distance)-100)/100)));// LED OFF
-  } else if (distance > _DIST_MAX) {
-    distance = _DIST_MAX;    // Set Higher Value
+    distance = previous;    // Set Lower Value
+    if (distance >= 100.0 && distance <= 200.0){
+     analogWrite(PIN_LED, int(255-(255*(int(distance)-100)/100)));
+    }
+    else if(distance > 200.0 && distance <= 300.0){
+      analogWrite(PIN_LED, int((255*(int(distance)-200)/100)));
+    }  
+    //}// LED OFF
+  } 
+  else if (distance > _DIST_MAX) {
+    distance = previous;    // Set Higher Value
     analogWrite(PIN_LED, int((255*(int(distance)-200)/100)));      // LED OFF
   }else if(distance >= 100.0 && distance <= 200.0){
           analogWrite(PIN_LED, int(255-(255*(int(distance)-100)/100)));
    }else if(distance > 200.0 && distance <= 300.0){
     analogWrite(PIN_LED, int((255*(int(distance)-200)/100)));
     }
+    previous = distance;
   
 
   // output the distance to the serial port
