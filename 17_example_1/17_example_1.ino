@@ -40,7 +40,7 @@ void loop()
   last_loop_time += LOOP_INTERVAL;
   
   // Modify the below line to implement the EMA equation
-  dist = (6762.0/(a_value-9)-4.0)*10.0- 65.0;
+  dist = (6762.0/(a_value-9)-4.0)*10.0- 60.0;
   
   
   
