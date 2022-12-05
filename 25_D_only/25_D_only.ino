@@ -9,7 +9,7 @@
 // Event interval parameters
 #define _INTERVAL_DIST    20 // distance sensor interval (unit: ms)
 #define _INTERVAL_SERVO   20 // servo interval (unit: ms)
-#define _INTERVAL_SERIAL  20 // serial interval (unit: ms)
+#define _INTERVAL_SERIAL  80 // serial interval (unit: ms)
 
 // EMA filter configuration for the IR distance sensor
 #define _EMA_ALPHA 0.7      // EMA weight of new sample (range: 0 to 1)
@@ -18,14 +18,14 @@
 // Servo adjustment
 #define _DUTY_NEU 1475  // Servo angle: 0 degree
 #define _DUTY_MAX 2062  // Servo angle: D degree
-#define _DUTY_MIN 769    // Servo angle: E degree
+#define _DUTY_MIN 769   // Servo angle: E degree
 #define _SERVO_ANGLE_DIFF 112 // Replace with |D - E| degree
-#define _SERVO_SPEED 2000 // servo speed limit (unit: degree/second)
+#define _SERVO_SPEED 50 // servo speed limit (unit: degree/second)
 
 // PID parameters
-#define _KP 3.2 // proportional gain
-//#define _KI 0 // derivative gain
-//#define _KD 0 // integral gain
+//#define _KP 0 // proportional gain
+#define _KD 110 // derivative gain
+//#define _KI 0 // integral gain
 
 // global variables
 float dist_filtered, dist_ema, dist_target; // unit: mm
@@ -90,10 +90,11 @@ void loop()
     dist_ema = _EMA_ALPHA * dist_ema + (1.0 - _EMA_ALPHA) * dist_filtered;
 
     // Update PID control variables
-    error_curr = 155-dist_ema;
-    pterm = _KP*error_curr;
-    control = pterm;
+    error_curr = dist_target - dist_ema;
+    dterm = _KD * (error_curr - error_prev);
+    control = dterm;
     duty_target = _DUTY_NEU + control;
+    error_prev = error_curr;
 
     if(error_curr > 0) digitalWrite(PIN_LED, 1);
     else digitalWrite(PIN_LED, 0);
@@ -124,17 +125,14 @@ void loop()
     // use for debugging
     if(0) {
       Serial.print(",ERROR:"); Serial.print(error_curr); 
-      Serial.print(",pterm:"); Serial.print(pterm);
-     Serial.print(",duty_target:"); Serial.print(duty_target);
-     Serial.print(",duty_curr:"); Serial.print(duty_curr);
+      Serial.print(",dterm:"); Serial.print(dterm);
+      Serial.print(",duty_target:"); Serial.print(duty_target);
+      Serial.print(",duty_curr:"); Serial.print(duty_curr);
     }
-    // For evaluation
-    Serial.print("10m:130,10M:180,9m:100,9M:210,TARGET:");
-    Serial.print(dist_target);
+    Serial.print("MIN:0,MAX:310,");
     Serial.print(",DIST:"), Serial.println(dist_ema);
   }
 }
-
 float volt_to_distance(int a_value)
 {
   return 504 + -1.63*a_value + 1.32E-03*a_value*a_value; // Replace this with the equation obtained from nonlinear regression analysis
