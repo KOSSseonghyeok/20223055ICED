@@ -18,18 +18,18 @@
 #define _EMA_ALPHA 0.9   // EMA weight of new sample (range: 0 to 1)
 
 // Servo adjustment
-#define _DUTY_NEU 1425
+#define _DUTY_NEU 1550
 #define _DUTY_MIN 769
 #define _DUTY_MAX 2062
 #define _SERVO_ANGLE_DIFF 112 // servo angle difference between _DUTY_MIN and _DUTY_MAX (unit: degree)
-#define _SERVO_SPEED 100 // servo speed limit (unit: degree/second)
+#define _SERVO_SPEED 150 // servo speed limit (unit: degree/second)
 
 // PID parameters
 #define _DIST_TARGET 155 // center of the rail (unit: mm)
-#define _KP 4.2 // proportional gain
-#define _KD 290 // derivative gain
-#define _KI 0.001 // integral gain
-//#define _ITERM_MAX 0 // uncomment if necessary
+#define _KP 4.5  // proportional gain 3.5 3.4
+#define _KD 300 // derivative gain 260 295
+#define _KI 1.5 // integral gain 0.002
+#define _ITERM_MAX 100 // uncomment if necessary
 
 //////////////// DO NOT modify below section!! /////////////////////////        
 unsigned long error_sum, error_cnt, toggle_cnt;
@@ -56,7 +56,7 @@ void setup()
   pinMode(PIN_LED,OUTPUT);
   myservo.attach(PIN_SERVO); 
   duty_target = duty_curr = _DUTY_NEU;
-  myservo.writeMicroseconds(duty_curr);  
+  myservo.writeMicroseconds(_DUTY_MAX);  
  
   // convert angular speed into duty change per interval.
   duty_change_per_interval = 
@@ -109,9 +109,11 @@ void loop()
     event_dist = false;
     
     // Get a distance reading from the distance sensor
-    dist_filtered = volt_to_distance(ir_sensor_filtered(10, 0.5));
+    dist_filtered = volt_to_distance(ir_sensor_filtered(10, 0.2));
     dist_ema = _EMA_ALPHA * dist_ema + (1.0 - _EMA_ALPHA) * dist_filtered;
-
+     if(dist_ema <= 0){
+      dist_ema = 0;
+    }
     // Update PID variables
     error_curr = dist_target - dist_ema;
 
@@ -134,6 +136,7 @@ void loop()
     pterm =  _KP * error_curr;
     dterm =  _KD * (error_curr - error_prev);
     iterm += _KI * error_curr;
+    if (abs(iterm) > _ITERM_MAX) iterm = 0;
     control = pterm + dterm + iterm;
     duty_target = _DUTY_NEU + control;
     error_prev = error_curr;
@@ -201,10 +204,9 @@ void loop()
     }
   }
 }
-
 float volt_to_distance(int a_value)
 {
-  return 504 + -1.63*a_value + 1.32E-03*a_value*a_value; // Replace this with the equation obtained from nonlinear regression analysis
+  return 1090 + -5.88*a_value + 0.0112*pow(a_value,2) + -7.36E-06*pow(a_value,3);
 }
 
 unsigned int ir_sensor_filtered(unsigned int n, float position)

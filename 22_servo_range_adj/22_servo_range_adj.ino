@@ -8,8 +8,8 @@
 #define _INTERVAL_SERVO   20 // servo interval (unit: ms)
 #define _INTERVAL_SERIAL  500 // serial interval (unit: ms)
 #define _DUTY_NEU 1475
-#define _DUTY_MAX 2500
-#define _DUTY_MIN 500
+#define _DUTY_MAX 2062
+#define _DUTY_MIN 769
 #define _ADJ_RANGE 1000
 
 // global variables
